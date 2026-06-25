@@ -231,7 +231,7 @@ function RequirementsSectionView({ data }: { data: RequirementsSection }) {
         subtitle="Spend the first 5 minutes here. Jumping to design without this is the #1 reason candidates fail."
       />
 
-      <div className="grid gap-4 grid-cols-2 w-full">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 w-full">
         {/* Functional */}
         <div
           className="rounded-xl p-5"
@@ -355,7 +355,7 @@ function EstimationSectionView({ data }: { data: EstimationSection }) {
           assumptions
         </p>
         <div
-          className="rounded-xl p-5"
+          className="rounded-xl p-5 overflow-x-auto"
           style={{ border: "1px solid #2A2724", background: "#161513" }}
         >
           <table className="w-full">
@@ -398,7 +398,7 @@ function EstimationSectionView({ data }: { data: EstimationSection }) {
             {group.title.toLowerCase()}
           </p>
           <div
-            className="rounded-xl overflow-hidden"
+            className="rounded-xl overflow-x-auto"
             style={{ border: "1px solid #2A2724", background: "#161513" }}
           >
             <table className="w-full">
@@ -591,9 +591,9 @@ function TradeoffsSectionView({ data }: { data: TradeoffsSection }) {
         subtitle="Juniors name components. Seniors explain WHY and acknowledge what they gave up."
       />
 
-      {/* Comparison table */}
+      {/* Comparison table — desktop (sm and above) */}
       <div
-        className="rounded-xl overflow-hidden"
+        className="hidden sm:block rounded-xl overflow-hidden"
         style={{ border: "1px solid #2A2724" }}
       >
         {/* Header */}
@@ -627,24 +627,38 @@ function TradeoffsSectionView({ data }: { data: TradeoffsSection }) {
             <span className="font-mono font-medium" style={{ color: "#F5F0EB" }}>
               {row.decision}
             </span>
-            <span
-              className="font-mono text-xs"
-              style={{ color: "#8C8680" }}
-            >
+            <span className="font-mono text-xs" style={{ color: "#8C8680" }}>
               {row.optionA}
             </span>
-            <span
-              className="font-mono text-xs"
-              style={{ color: "#8C8680" }}
-            >
+            <span className="font-mono text-xs" style={{ color: "#8C8680" }}>
               {row.optionB}
             </span>
-            <span
-              className="text-xs leading-relaxed"
-              style={{ color: "#A09890" }}
-            >
+            <span className="text-xs leading-relaxed" style={{ color: "#A09890" }}>
               {row.pick}
             </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Comparison cards — mobile (below sm) */}
+      <div className="sm:hidden space-y-3">
+        {data.rows.map((row, i) => (
+          <div
+            key={i}
+            className="rounded-xl p-4 space-y-2"
+            style={{ border: "1px solid #2A2724", background: "#1C1A18" }}
+          >
+            <p className="text-sm font-mono font-medium" style={{ color: "#F5F0EB" }}>
+              {row.decision}
+            </p>
+            <div className="flex gap-2 text-xs font-mono flex-wrap">
+              <span className="px-2 py-0.5 rounded" style={{ background: "rgba(16,185,129,0.08)", color: "#8C8680" }}>{row.optionA}</span>
+              <span className="font-mono" style={{ color: "#3D3830" }}>vs</span>
+              <span className="px-2 py-0.5 rounded" style={{ background: "rgba(244,63,94,0.08)", color: "#8C8680" }}>{row.optionB}</span>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: "#A09890" }}>
+              <span style={{ color: "#F59E0B" }}>→ </span>{row.pick}
+            </p>
           </div>
         ))}
       </div>
@@ -735,7 +749,7 @@ function CheatSheetSectionView({ data }: { data: CheatSheetSection }) {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 w-full">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 w-full">
         {/* Numbers */}
         <div>
           <p
@@ -1040,7 +1054,7 @@ export default function PrepPage() {
       <div className="flex-1 min-w-0">
         {/* Top bar */}
         <div
-          className="sticky top-0 z-10 flex items-center gap-3 px-6 py-4 border-b backdrop-blur-md"
+          className="sticky top-0 z-10 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b backdrop-blur-md"
           style={{
             borderColor: "#2A2724",
             background: "rgba(15,14,13,0.9)",
@@ -1048,37 +1062,70 @@ export default function PrepPage() {
         >
           <Link
             href={`/learn/${systemId}`}
-            className="font-mono text-xs transition-colors"
+            className="hidden sm:block font-mono text-xs transition-colors"
             style={{ color: "#524E4A" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
           >
             ← story mode
           </Link>
-          <span style={{ color: "#2A2724" }}>·</span>
-          <span className="font-mono text-xs" style={{ color: "#524E4A" }}>
+          <span className="hidden sm:block" style={{ color: "#2A2724" }}>·</span>
+          <span className="font-mono text-xs truncate" style={{ color: "#524E4A" }}>
             {prepData.systemName}
           </span>
           <span style={{ color: "#2A2724" }}>·</span>
-          <span className="font-mono text-xs" style={{ color: "#F59E0B" }}>
-            interview prep
+          <span className="font-mono text-xs shrink-0" style={{ color: "#F59E0B" }}>
+            prep
           </span>
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-3">
             <Link
               href={`/design/${systemId}`}
-              className="font-mono text-xs transition-colors"
+              className="hidden sm:block font-mono text-xs transition-colors"
               style={{ color: "#524E4A" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
             >
               try the canvas →
             </Link>
+            <Link
+              href="/"
+              className="sm:hidden font-mono text-xs transition-colors"
+              style={{ color: "#524E4A" }}
+            >
+              ←
+            </Link>
           </div>
         </div>
 
+        {/* Mobile section nav (hidden on lg where sidebar handles this) */}
+        <div
+          className="lg:hidden sticky top-[49px] z-10 overflow-x-auto border-b px-4 py-2 flex gap-2"
+          style={{ borderColor: "#2A2724", background: "rgba(15,14,13,0.95)" }}
+        >
+          {sections.map((section) => {
+            const id = getSectionId(section);
+            const isActive = activeSection === id;
+            const isDone = completedSections.has(id) && !isActive;
+            return (
+              <button
+                key={id}
+                onClick={() => scrollToSection(id)}
+                className="shrink-0 text-xs font-mono px-3 py-1.5 rounded-full transition-all whitespace-nowrap"
+                style={{
+                  background: isActive ? "rgba(245,158,11,0.12)" : "transparent",
+                  color: isActive ? "#F59E0B" : isDone ? "#10B981" : "#524E4A",
+                  border: `1px solid ${isActive ? "rgba(245,158,11,0.3)" : isDone ? "rgba(16,185,129,0.3)" : "#2A2724"}`,
+                }}
+              >
+                {isDone ? "✓ " : ""}{getSectionLabel(section)}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Page header */}
-        <div className="px-6 pt-10 pb-0 max-w-[800px]">
+        <div className="px-4 sm:px-6 pt-8 sm:pt-10 pb-0 max-w-[800px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1088,7 +1135,7 @@ export default function PrepPage() {
               // interview prep
             </p>
             <h1
-              className="text-4xl font-bold tracking-tight font-display mb-3"
+              className="text-3xl sm:text-4xl font-bold tracking-tight font-display mb-3"
               style={{ color: "#F5F0EB" }}
             >
               {prepData.systemName}
@@ -1101,14 +1148,14 @@ export default function PrepPage() {
         </div>
 
         {/* All sections — static and interactive unified */}
-        <div className="px-6 pb-24">
+        <div className="px-4 sm:px-6 pb-24">
           {sections.map((section, i) => {
             const id = getSectionId(section);
             return (
               <section
                 key={id}
                 ref={registerRef(id)}
-                className="max-w-[800px] py-10"
+                className="max-w-[800px] py-8 sm:py-10"
                 style={{
                   borderTop: i > 0 ? "1px solid #2A2724" : "none",
                 }}

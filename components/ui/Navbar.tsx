@@ -33,7 +33,7 @@ export function Navbar() {
         </a>
         <Link
           href="/concepts"
-          className="hidden sm:block text-sm font-mono transition-colors"
+          className="text-sm font-mono transition-colors"
           style={{ color: "#524E4A" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}

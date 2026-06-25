@@ -6,6 +6,10 @@ import {
   useDraggable,
   useDroppable,
   DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -157,7 +161,6 @@ function DroppableBucket({
     <div
       ref={setNodeRef}
       style={{
-        flex: 1,
         minHeight: 160,
         borderRadius: 12,
         border: isOver
@@ -276,6 +279,11 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+  );
+
   const unassigned = items.filter((i) => assignments[i.id] === "__pile__");
   const allPlaced = unassigned.length === 0;
 
@@ -326,9 +334,9 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
         drag each item into the correct bucket
       </p>
 
-      <DndContext id="requirements-sorter" onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext id="requirements-sorter" sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Buckets */}
-        <div className="flex gap-3 mb-4" style={{ flexWrap: "wrap" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           {buckets.map((bucket) => (
             <DroppableBucket
               key={bucket.id}

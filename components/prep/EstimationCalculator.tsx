@@ -150,115 +150,93 @@ export function EstimationCalculator({
                 transition: "background 0.25s",
               }}
             >
-              <div
-                className="px-5 py-3 flex items-center gap-3"
-                style={{ minHeight: 52 }}
-              >
-                {/* Label */}
-                <div style={{ flex: "0 0 180px" }}>
-                  <p
-                    className="text-xs font-mono"
-                    style={{ color: "#8C8680" }}
-                  >
-                    {step.label}
-                  </p>
-                </div>
+              {/* Shared: input / computed value element */}
+              {(() => {
+                const inputEl = step.userInput ? (
+                  <div className="relative">
+                    {revealed ? (
+                      <span className="font-mono text-sm font-medium" style={{ color: "#F43F5E" }}>
+                        {step.answer.toLocaleString()}
+                      </span>
+                    ) : (
+                      <input
+                        type="text"
+                        value={values[step.id] ?? ""}
+                        onChange={(e) =>
+                          setValues((prev) => ({ ...prev, [step.id]: e.target.value }))
+                        }
+                        disabled={isCorrect || revealed || (isWrong && revealed)}
+                        placeholder="?"
+                        className="font-mono text-sm text-right outline-none rounded-lg px-2 py-1 transition-all"
+                        style={{
+                          width: 90,
+                          background: "#0F0E0D",
+                          border: isCorrect
+                            ? "1px solid rgba(16,185,129,0.5)"
+                            : isWrong
+                            ? "1px solid rgba(244,63,94,0.5)"
+                            : "1px solid #2A2724",
+                          color: isCorrect ? "#10B981" : isWrong ? "#F43F5E" : "#F5F0EB",
+                        }}
+                        onFocus={(e) => {
+                          if (!isCorrect && !isWrong)
+                            e.currentTarget.style.borderColor = "rgba(245,158,11,0.5)";
+                        }}
+                        onBlur={(e) => {
+                          if (!isCorrect && !isWrong)
+                            e.currentTarget.style.borderColor = "#2A2724";
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <span className="font-mono text-sm font-medium" style={{ color: "#524E4A" }}>
+                    {step.answer.toLocaleString()}
+                  </span>
+                );
 
-                {/* Formula */}
-                <div style={{ flex: 1 }}>
-                  <p
-                    className="text-xs font-mono"
-                    style={{ color: "#3D3830" }}
-                  >
-                    {step.formula}
-                  </p>
-                </div>
+                const iconEl = isCorrect ? (
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ color: "#10B981", fontSize: 14 }}>
+                    ✓
+                  </motion.span>
+                ) : null;
 
-                {/* Input or computed value */}
-                <div
-                  style={{ flex: "0 0 120px", display: "flex", justifyContent: "flex-end" }}
-                >
-                  {step.userInput ? (
-                    <div className="relative">
-                      {revealed ? (
-                        <span
-                          className="font-mono text-sm font-medium"
-                          style={{ color: "#F43F5E" }}
-                        >
-                          {step.answer.toLocaleString()}
-                        </span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={values[step.id] ?? ""}
-                          onChange={(e) =>
-                            setValues((prev) => ({
-                              ...prev,
-                              [step.id]: e.target.value,
-                            }))
-                          }
-                          disabled={isCorrect || revealed || (isWrong && revealed)}
-                          placeholder="?"
-                          className="font-mono text-sm text-right outline-none rounded-lg px-2 py-1 transition-all"
-                          style={{
-                            width: 100,
-                            background: "#0F0E0D",
-                            border: isCorrect
-                              ? "1px solid rgba(16,185,129,0.5)"
-                              : isWrong
-                              ? "1px solid rgba(244,63,94,0.5)"
-                              : "1px solid #2A2724",
-                            color: isCorrect
-                              ? "#10B981"
-                              : isWrong
-                              ? "#F43F5E"
-                              : "#F5F0EB",
-                          }}
-                          onFocus={(e) => {
-                            if (!isCorrect && !isWrong)
-                              e.currentTarget.style.borderColor =
-                                "rgba(245,158,11,0.5)";
-                          }}
-                          onBlur={(e) => {
-                            if (!isCorrect && !isWrong)
-                              e.currentTarget.style.borderColor = "#2A2724";
-                          }}
-                        />
-                      )}
+                return (
+                  <>
+                    {/* Desktop row (sm and above) */}
+                    <div className="hidden sm:flex items-center gap-3 px-5 py-3" style={{ minHeight: 52 }}>
+                      <div style={{ flex: "0 0 180px" }}>
+                        <p className="text-xs font-mono" style={{ color: "#8C8680" }}>{step.label}</p>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p className="text-xs font-mono" style={{ color: "#3D3830" }}>{step.formula}</p>
+                      </div>
+                      <div style={{ flex: "0 0 120px", display: "flex", justifyContent: "flex-end" }}>
+                        {inputEl}
+                      </div>
+                      <div style={{ flex: "0 0 120px" }}>
+                        <p className="text-xs font-mono" style={{ color: "#3D3830" }}>{step.unit}</p>
+                      </div>
+                      <div style={{ width: 20, textAlign: "center" }}>{iconEl}</div>
                     </div>
-                  ) : (
-                    <span
-                      className="font-mono text-sm font-medium"
-                      style={{ color: "#524E4A" }}
-                    >
-                      {step.answer.toLocaleString()}
-                    </span>
-                  )}
-                </div>
 
-                {/* Unit */}
-                <div style={{ flex: "0 0 120px" }}>
-                  <p
-                    className="text-xs font-mono"
-                    style={{ color: "#3D3830" }}
-                  >
-                    {step.unit}
-                  </p>
-                </div>
+                    {/* Mobile rows (stacked) */}
+                    <div className="sm:hidden px-4 py-3 space-y-1.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs font-mono flex-1 min-w-0" style={{ color: "#8C8680" }}>{step.label}</p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {inputEl}
+                          <div style={{ width: 16, textAlign: "center" }}>{iconEl}</div>
+                        </div>
+                      </div>
+                      <p className="text-xs font-mono" style={{ color: "#3D3830" }}>
+                        {step.formula}{step.unit ? ` · ${step.unit}` : ""}
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
 
-                {/* Status icon */}
-                <div style={{ width: 20, textAlign: "center" }}>
-                  {isCorrect && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      style={{ color: "#10B981", fontSize: 14 }}
-                    >
-                      ✓
-                    </motion.span>
-                  )}
-                </div>
-              </div>
 
               {/* Hint / reveal row */}
               <AnimatePresence>
