@@ -42,6 +42,12 @@ const BUCKET_STYLES: Record<
   },
 };
 
+const BUCKET_ICONS: Record<string, string> = {
+  functional: "✓",
+  "non-functional": "⚡",
+  "out-of-scope": "✗",
+};
+
 // ── DraggableItemCard ──────────────────────────────────────────────────────
 
 function DraggableItemCard({
@@ -59,83 +65,122 @@ function DraggableItemCard({
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: item.id, disabled });
+  const [isHovered, setIsHovered] = useState(false);
 
-  const style = transform
-    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
-    : undefined;
-
-  const borderColor = checked
+  const accentColor = checked
     ? isCorrect
       ? "rgba(16,185,129,0.6)"
       : "rgba(244,63,94,0.6)"
-    : "#2A2724";
+    : "rgba(245,158,11,0.3)";
+
+  const borderColor = checked
+    ? isCorrect
+      ? "rgba(16,185,129,0.5)"
+      : "rgba(244,63,94,0.5)"
+    : isHovered && !disabled
+    ? "rgba(245,158,11,0.6)"
+    : "#3D3830";
 
   const bgColor = checked
     ? isCorrect
       ? "rgba(16,185,129,0.06)"
       : "rgba(244,63,94,0.06)"
-    : "#1C1A18";
+    : "#242220";
+
+  const dndTransform = transform
+    ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+    : undefined;
+
+  const hoverTransform =
+    isHovered && !disabled && !isDragging && !checked
+      ? "translateY(-1px)"
+      : undefined;
 
   return (
     <div
       ref={overlay ? undefined : setNodeRef}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
-        ...style,
+        transform: dndTransform ?? hoverTransform,
         opacity: isDragging && !overlay ? 0.3 : 1,
         cursor: disabled ? "default" : "grab",
         touchAction: "none",
-        border: `1px solid ${borderColor}`,
+        borderTop: `1px solid ${borderColor}`,
+        borderRight: `1px solid ${borderColor}`,
+        borderBottom: `1px solid ${borderColor}`,
+        borderLeft: checked ? `1px solid ${borderColor}` : `3px solid ${accentColor}`,
         background: bgColor,
         borderRadius: 8,
         padding: "10px 14px",
         fontSize: 13,
         color: "#A09890",
-        transition: "border-color 0.2s, background 0.2s",
+        transition: "border-color 0.15s, background 0.15s, transform 0.1s",
         userSelect: "none",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 8,
       }}
       {...(overlay ? {} : { ...listeners, ...attributes })}
     >
-      <p className="leading-snug">{item.text}</p>
-      <AnimatePresence>
-        {checked && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-            animate={{ opacity: 1, height: "auto", marginTop: 6 }}
-            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ overflow: "hidden" }}
-          >
-            {isCorrect ? (
-              <p
-                className="text-xs font-mono leading-relaxed"
-                style={{ color: "#10B981" }}
-              >
-                ✓ {item.explanation}
-              </p>
-            ) : (
-              <div>
+      {/* Drag handle */}
+      {!disabled && (
+        <span
+          style={{
+            color: "#524E4A",
+            fontSize: 14,
+            flexShrink: 0,
+            marginTop: 1,
+            lineHeight: 1,
+          }}
+        >
+          ⠿
+        </span>
+      )}
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p className="leading-snug">{item.text}</p>
+        <AnimatePresence>
+          {checked && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 6 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ overflow: "hidden" }}
+            >
+              {isCorrect ? (
                 <p
-                  className="text-xs font-mono"
-                  style={{ color: "#F43F5E" }}
+                  className="text-xs font-mono leading-relaxed"
+                  style={{ color: "#10B981" }}
                 >
-                  Actually:{" "}
-                  {item.correctBucket === "functional"
-                    ? "Functional"
-                    : item.correctBucket === "non-functional"
-                    ? "Non-Functional"
-                    : "Out of Scope"}
+                  ✓ {item.explanation}
                 </p>
-                <p
-                  className="text-xs font-mono mt-1 leading-relaxed"
-                  style={{ color: "#524E4A" }}
-                >
-                  {item.explanation}
-                </p>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              ) : (
+                <div>
+                  <p
+                    className="text-xs font-mono"
+                    style={{ color: "#F43F5E" }}
+                  >
+                    Actually:{" "}
+                    {item.correctBucket === "functional"
+                      ? "Functional"
+                      : item.correctBucket === "non-functional"
+                      ? "Non-Functional"
+                      : "Out of Scope"}
+                  </p>
+                  <p
+                    className="text-xs font-mono mt-1 leading-relaxed"
+                    style={{ color: "#524E4A" }}
+                  >
+                    {item.explanation}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -147,15 +192,34 @@ function DroppableBucket({
   assignedItems,
   checked,
   assignments,
+  isDraggingAny,
 }: {
   bucket: { id: string; label: string; description: string };
   assignedItems: RequirementItem[];
   checked: boolean;
   assignments: Record<string, string>;
+  isDraggingAny: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: bucket.id });
   const s = BUCKET_STYLES[bucket.id] ?? BUCKET_STYLES["functional"];
+  const icon = BUCKET_ICONS[bucket.id] ?? "";
   const isEmpty = assignedItems.length === 0;
+
+  const borderStyle = isOver
+    ? `2px solid ${s.border}`
+    : isEmpty && isDraggingAny
+    ? `2px dashed #F59E0B`
+    : isEmpty
+    ? `1.5px dashed ${s.dimBorder}`
+    : `1.5px solid ${s.border}`;
+
+  const bgStyle = isOver
+    ? s.bg
+    : isEmpty && isDraggingAny
+    ? "rgba(245,158,11,0.02)"
+    : isEmpty
+    ? "transparent"
+    : s.bg;
 
   return (
     <div
@@ -163,12 +227,10 @@ function DroppableBucket({
       style={{
         minHeight: 160,
         borderRadius: 12,
-        border: isOver
-          ? `2px solid ${s.border}`
-          : isEmpty
-          ? `1.5px dashed ${s.dimBorder}`
-          : `1.5px solid ${s.border}`,
-        background: isOver ? s.bg : isEmpty ? "transparent" : s.bg,
+        border: borderStyle,
+        background: isEmpty
+          ? `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.01) 10px, rgba(255,255,255,0.01) 11px), ${bgStyle}`
+          : bgStyle,
         transition: "border-color 0.15s, background 0.15s",
         padding: "12px",
         display: "flex",
@@ -178,23 +240,26 @@ function DroppableBucket({
     >
       <div className="mb-1">
         <p
-          className="text-xs font-mono font-semibold"
-          style={{ color: s.title }}
+          className="font-mono font-semibold flex items-center gap-1.5"
+          style={{ fontSize: 15, color: s.title }}
         >
+          <span style={{ fontSize: 13 }}>{icon}</span>
           {bucket.label}
         </p>
-        <p className="text-xs" style={{ color: "#524E4A" }}>
+        <p className="text-xs mt-0.5" style={{ color: "#524E4A" }}>
           {bucket.description}
         </p>
       </div>
 
       {isEmpty && !isOver && (
-        <p
-          className="text-xs font-mono text-center mt-4"
-          style={{ color: "#3D3830" }}
-        >
-          drop here
-        </p>
+        <div className="flex-1 flex items-center justify-center">
+          <p
+            className="text-base font-mono text-center"
+            style={{ color: "#3D3830" }}
+          >
+            drop here
+          </p>
+        </div>
       )}
 
       {assignedItems.map((item) => (
@@ -202,11 +267,7 @@ function DroppableBucket({
           key={item.id}
           item={item}
           checked={checked}
-          isCorrect={
-            checked
-              ? item.correctBucket === bucket.id
-              : null
-          }
+          isCorrect={checked ? item.correctBucket === bucket.id : null}
           disabled={checked}
         />
       ))}
@@ -324,9 +385,7 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
     setShowAll(true);
   }
 
-  const activeItem = activeId
-    ? items.find((i) => i.id === activeId)
-    : null;
+  const activeItem = activeId ? items.find((i) => i.id === activeId) : null;
 
   return (
     <div>
@@ -334,28 +393,29 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
         drag each item into the correct bucket
       </p>
 
-      <DndContext id="requirements-sorter" sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        id="requirements-sorter"
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         {/* Buckets */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           {buckets.map((bucket) => (
             <DroppableBucket
               key={bucket.id}
               bucket={bucket}
-              assignedItems={items.filter(
-                (i) => assignments[i.id] === bucket.id
-              )}
+              assignedItems={items.filter((i) => assignments[i.id] === bucket.id)}
               checked={checked || showAll}
               assignments={assignments}
+              isDraggingAny={activeId !== null}
             />
           ))}
         </div>
 
         {/* Pile */}
         {!showAll && (
-          <DroppablePile
-            unassignedItems={unassigned}
-            checked={checked}
-          />
+          <DroppablePile unassignedItems={unassigned} checked={checked} />
         )}
 
         {/* Drag overlay */}
@@ -364,7 +424,7 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
             <div
               style={{
                 border: "1px solid rgba(245,158,11,0.5)",
-                background: "#1C1A18",
+                background: "#242220",
                 borderRadius: 8,
                 padding: "10px 14px",
                 fontSize: 13,
@@ -418,12 +478,8 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
                   onClick={handleShowAll}
                   className="text-xs font-mono transition-colors"
                   style={{ color: "#524E4A" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = "#8C8680")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = "#524E4A")
-                  }
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
                 >
                   see all answers →
                 </button>
@@ -432,12 +488,8 @@ export function RequirementsSorter({ items, buckets }: RequirementsSorterProps) 
                 onClick={handleReset}
                 className="text-xs font-mono transition-colors"
                 style={{ color: "#524E4A" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = "#8C8680")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "#524E4A")
-                }
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
               >
                 ↺ try again
               </button>

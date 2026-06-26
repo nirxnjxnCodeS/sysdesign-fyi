@@ -104,7 +104,7 @@ function renderInteraction(interaction: SectionInteraction) {
 function InteractiveSectionView({ section }: { section: InteractivePrepSection }) {
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-6">
         <p className="font-mono text-xs mb-2" style={{ color: "#524E4A" }}>
           {section.step}
         </p>
@@ -135,7 +135,7 @@ function SectionHeading({
   subtitle: string;
 }) {
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <p className="font-mono text-xs mb-2" style={{ color: "#524E4A" }}>
         {step}
       </p>
@@ -877,18 +877,18 @@ function SidebarNavItem({
   return (
     <button
       onClick={() => onNavigate(id)}
-      className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-mono"
+      className="w-full text-left flex items-center gap-3 px-4 py-2 rounded-lg transition-all font-mono"
       style={{
-        fontSize: 11,
+        fontSize: 13,
         lineHeight: 1.4,
         background: isActive ? "rgba(245,158,11,0.08)" : "transparent",
-        color: isActive ? "#F59E0B" : "#524E4A",
+        color: isActive ? "#F59E0B" : "#6B6560",
       }}
       onMouseEnter={(e) => {
         if (!isActive) e.currentTarget.style.color = "#8C8680";
       }}
       onMouseLeave={(e) => {
-        if (!isActive) e.currentTarget.style.color = "#524E4A";
+        if (!isActive) e.currentTarget.style.color = isActive ? "#F59E0B" : "#6B6560";
       }}
     >
       <span
@@ -897,7 +897,10 @@ function SidebarNavItem({
           background: isDone ? "#10B981" : isActive ? "#F59E0B" : "#2A2724",
         }}
       />
-      {label}
+      <span className="flex-1">{label}</span>
+      {isDone && !isActive && (
+        <span className="text-xs shrink-0" style={{ color: "#059669" }}>✓</span>
+      )}
     </button>
   );
 }
@@ -915,11 +918,11 @@ function Sidebar({
 }) {
   return (
     <aside
-      className="hidden lg:flex flex-col w-[260px] shrink-0 sticky top-0 h-screen pt-20 pb-8 pl-6 overflow-y-auto"
+      className="hidden lg:flex flex-col w-[260px] shrink-0 sticky top-0 h-screen pt-20 pb-8 px-5 overflow-y-auto"
       style={{ borderRight: "1px solid #2A2724" }}
     >
-      <p className="font-mono text-xs mb-6" style={{ color: "#524E4A" }}>
-        // interview prep
+      <p className="font-mono text-xs mb-3" style={{ color: "#524E4A" }}>
+        // progress
       </p>
 
       <nav className="space-y-1 mb-4">
@@ -1155,7 +1158,7 @@ export default function PrepPage() {
               <section
                 key={id}
                 ref={registerRef(id)}
-                className="max-w-[800px] py-8 sm:py-10"
+                className="max-w-[800px] py-8"
                 style={{
                   borderTop: i > 0 ? "1px solid #2A2724" : "none",
                 }}
