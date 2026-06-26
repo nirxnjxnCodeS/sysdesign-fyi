@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useAnimate } from "framer-motion";
 import type { StoryDecisionData, StoryOptionData } from "@/lib/types";
 
@@ -33,6 +33,7 @@ function OptionButton({
   onSelect: (id: string) => void;
 }) {
   const [scope, animate] = useAnimate();
+  const [isHovered, setIsHovered] = useState(false);
   const isSelected = selectedId === option.id;
   const isDisabled = phase !== "deciding";
   const isCorrect = isSelected && option.correct;
@@ -46,19 +47,17 @@ function OptionButton({
     }
     if (isWrong) {
       animate(scope.current, { x: SHAKE }, { duration: 0.55, ease: "easeOut" });
-      animate(
-        scope.current,
-        { backgroundColor: ["transparent", "rgba(244, 63, 94, 0.06)", "transparent"] },
-        { duration: 0.8 }
-      );
     }
   }, [phase, isCorrect, isWrong, animate, scope]);
 
-  const letterBg = isCorrect
+  const badgeBg = isCorrect
     ? "#064e3b"
     : isWrong
     ? "#4c0519"
+    : isHovered && !isDisabled
+    ? "#3D3830"
     : "#2A2724";
+
   const letterColor = isCorrect
     ? "#10B981"
     : isWrong
@@ -73,32 +72,48 @@ function OptionButton({
     ? "#524E4A"
     : "#F5F0EB";
 
+  const cardBorder = isCorrect
+    ? "1px solid rgba(16,185,129,0.4)"
+    : isWrong
+    ? "1px solid rgba(244,63,94,0.4)"
+    : isHovered && !isDisabled
+    ? "1px solid rgba(245,158,11,0.4)"
+    : "1px solid #2A2724";
+
+  const cardBg = isCorrect
+    ? "rgba(16,185,129,0.06)"
+    : isWrong
+    ? "rgba(244,63,94,0.06)"
+    : isHovered && !isDisabled
+    ? "#1F1D1A"
+    : "#1C1A18";
+
   return (
     <motion.div ref={scope}>
       <button
         onClick={() => !isDisabled && onSelect(option.id)}
         disabled={isDisabled}
-        className={`group w-full text-left flex items-center gap-4 py-4 border-b transition-all ${
-          isDimmed ? "opacity-30" : ""
-        }`}
+        onMouseEnter={() => !isDisabled && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`w-full text-left flex items-center gap-4 transition-all ${isDimmed ? "opacity-30" : ""}`}
         style={{
-          borderColor: "#2A2724",
-        }}
-        onMouseEnter={(e) => {
-          if (!isDisabled) {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245, 158, 11, 0.4)";
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(245, 158, 11, 0.03)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "#2A2724";
-          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+          background: cardBg,
+          border: cardBorder,
+          borderRadius: 10,
+          padding: "16px 20px",
+          cursor: isDisabled ? "default" : "pointer",
         }}
       >
-        {/* Letter square */}
+        {/* Badge 32×32 */}
         <span
-          className="shrink-0 w-7 h-7 flex items-center justify-center font-mono text-xs rounded transition-colors"
-          style={{ background: letterBg, color: letterColor }}
+          className="shrink-0 flex items-center justify-center font-mono text-sm transition-colors"
+          style={{
+            width: 32,
+            height: 32,
+            background: badgeBg,
+            color: letterColor,
+            borderRadius: 6,
+          }}
         >
           {option.id.toUpperCase()}
         </span>
@@ -164,13 +179,22 @@ export function DecisionPanel({
             className="flex"
             style={{
               borderLeft: "2px solid #F59E0B",
-              background: "rgba(245, 158, 11, 0.04)",
+              background: "linear-gradient(135deg, #1C1A18 0%, #161412 100%)",
+              boxShadow: "-3px 0 12px rgba(245,158,11,0.15)",
             }}
           >
             <div className="pl-4 pr-5 py-3">
-              <p className="font-mono text-xs mb-2" style={{ color: "#F59E0B" }}>
-                09:00 AM — CEO Message
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <motion.span
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="shrink-0 rounded-full"
+                  style={{ width: 6, height: 6, background: "#34D399", display: "inline-block" }}
+                />
+                <p className="font-mono text-xs" style={{ color: "#F59E0B" }}>
+                  09:00 AM — CEO Message
+                </p>
+              </div>
               <p className="text-sm leading-relaxed" style={{ color: "#8C8680" }}>
                 {scenario}
               </p>
@@ -178,11 +202,6 @@ export function DecisionPanel({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Decision counter */}
-      <p className="font-mono text-xs" style={{ color: "#524E4A" }}>
-        decision {decisionIndex + 1} of {totalDecisions}
-      </p>
 
       {/* Question */}
       <div>
@@ -208,8 +227,8 @@ export function DecisionPanel({
         </p>
       </div>
 
-      {/* Options */}
-      <div style={{ borderTop: "1px solid #2A2724" }}>
+      {/* Options — card style */}
+      <div className="flex flex-col" style={{ gap: 10 }}>
         {decision.options.map((option) => (
           <OptionButton
             key={option.id}

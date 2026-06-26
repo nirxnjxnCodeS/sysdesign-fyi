@@ -193,11 +193,31 @@ export function StoryExperience({ systemData }: Props) {
                   totalDecisions={systemData.decisions.length}
                 />
               </AnimatePresence>
-              {phase === "deciding" && (
-                <p className="font-mono text-xs mt-6 select-none" style={{ color: "#3D3830" }}>
-                  // waiting for your decision
-                </p>
-              )}
+
+              {/* Dot progress indicator */}
+              <div className="flex items-center justify-center gap-3 mt-8 pb-2">
+                {systemData.decisions.map((_, i) => {
+                  const isPast = i < currentIdx || (i === currentIdx && phase !== "deciding");
+                  const isActive = i === currentIdx && phase === "deciding";
+                  return (
+                    <motion.div
+                      key={i}
+                      animate={{
+                        background: isPast ? "#10B981" : isActive ? "#F59E0B" : "transparent",
+                        borderColor: isPast ? "transparent" : isActive ? "transparent" : "#2A2724",
+                      }}
+                      transition={{ duration: 0.3 }}
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        border: "1px solid #2A2724",
+                        flexShrink: 0,
+                      }}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
         </Panel>

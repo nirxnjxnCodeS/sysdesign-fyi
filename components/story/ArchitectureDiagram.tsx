@@ -448,17 +448,19 @@ function DiagramNode({
   isNew,
   compact,
   answers,
+  pulsing = false,
 }: {
   node: NodeSpec;
   isNew: boolean;
   compact?: boolean;
   answers: Record<number, DecisionAnswer>;
+  pulsing?: boolean;
 }) {
   const c = (idx: number) => answers[idx]?.isCorrect ?? false;
   const showBadge = node.badgeRevealOn !== undefined && c(node.badgeRevealOn);
   const color = nodeColor(node.id);
 
-  return (
+  const inner = (
     <motion.div
       variants={{
         hidden: { opacity: 0, scale: 0.86, y: 6 },
@@ -535,6 +537,24 @@ function DiagramNode({
       </div>
     </motion.div>
   );
+
+  if (!pulsing) return inner;
+
+  return (
+    <motion.div
+      animate={{
+        boxShadow: [
+          "0 0 0 0 rgba(245,158,11,0.4)",
+          "0 0 0 8px rgba(245,158,11,0)",
+          "0 0 0 0 rgba(245,158,11,0)",
+        ],
+      }}
+      transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+      style={{ borderRadius: 6 }}
+    >
+      {inner}
+    </motion.div>
+  );
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -546,6 +566,8 @@ export function ArchitectureDiagram({
 }: Props) {
   const { rows: rowSpecs, flowLabel } = DIAGRAMS[systemId] ?? DEFAULT_SPEC;
   const rows = evaluateRows(rowSpecs, answers, staticMode);
+
+  const isOnlyNode = rows.length === 1 && !staticMode;
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
@@ -576,6 +598,7 @@ export function ArchitectureDiagram({
                   node={row.spec.node}
                   isNew={row.isNew}
                   answers={answers}
+                  pulsing={isOnlyNode}
                 />
               ) : (
                 <div style={{ display: "flex", gap: 8, width: "100%" }}>
@@ -604,11 +627,24 @@ export function ArchitectureDiagram({
           style={{
             fontFamily: "var(--font-jetbrains), monospace",
             fontSize: 11,
-            color: "#524E4A",
+            color: "#6B6560",
             marginTop: 16,
           }}
         >
           // builds as you decide correctly
+          <motion.span
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
+            style={{
+              display: "inline-block",
+              width: 2,
+              height: 12,
+              background: "#F59E0B",
+              marginLeft: 4,
+              verticalAlign: "middle",
+              borderRadius: 1,
+            }}
+          />
         </motion.p>
       )}
 
