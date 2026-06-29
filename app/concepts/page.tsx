@@ -22,18 +22,240 @@ function AppearanceTag({ system }: { system: string }) {
   const [hovered, setHovered] = useState(false);
   return (
     <span
-      className="text-xs font-mono px-2 py-1 rounded-md transition-all duration-150"
+      className="text-xs font-mono px-3 py-1 rounded-full transition-all duration-150"
       style={{
-        background: "#242220",
-        border: hovered ? "1px solid rgba(245,158,11,0.3)" : "1px solid #3D3830",
+        background: "#1C1A18",
+        border: hovered ? "1px solid rgba(245,158,11,0.3)" : "1px solid #2A2724",
         color: hovered ? "rgba(251,191,36,0.7)" : "#8C8680",
-        cursor: "default",
+        cursor: "pointer",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {system}
     </span>
+  );
+}
+
+// ── Content parser ─────────────────────────────────────────────────────────
+
+type Block =
+  | { type: "hook"; text: string }
+  | { type: "arrow-group"; label?: string; items: string[] }
+  | { type: "interview"; content: string }
+  | { type: "gotcha"; content: string }
+  | { type: "numbered"; label?: string; items: string[] }
+  | { type: "body"; text: string };
+
+function parseFull(full: string): Block[] {
+  const paragraphs = full.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+  const blocks: Block[] = [];
+
+  paragraphs.forEach((para, i) => {
+    const lines = para.split("\n").map((l) => l.trim()).filter(Boolean);
+    const firstLine = lines[0] ?? "";
+
+    // Interview answer / application
+    if (/^interview (answer|application)/i.test(firstLine)) {
+      blocks.push({ type: "interview", content: para });
+      return;
+    }
+
+    // Arrow group (check before gotcha so "The honest rule of thumb:\n→..." gets arrow pills)
+    const arrowLines = lines.filter((l) => l.startsWith("→"));
+    if (arrowLines.length > 0) {
+      const nonArrow = lines.filter((l) => !l.startsWith("→")).join(" ").trim();
+      blocks.push({
+        type: "arrow-group",
+        label: nonArrow || undefined,
+        items: arrowLines.map((l) => l.replace(/^→\s*/, "")),
+      });
+      return;
+    }
+
+    // Gotcha / honest / trade-off (only when no arrows, so single-line honest answers land here)
+    if (/^the (gotcha|honest|trade-off)/i.test(firstLine)) {
+      const content = lines.slice(1).join("\n").trim() || firstLine;
+      blocks.push({ type: "gotcha", content });
+      return;
+    }
+
+    // Numbered list
+    if (lines.some((l) => /^\d+[.)]\s/.test(l))) {
+      const numLines = lines.filter((l) => /^\d+[.)]\s/.test(l));
+      const labelLines = lines.filter((l) => !/^\d+[.)]\s/.test(l));
+      blocks.push({
+        type: "numbered",
+        label: labelLines.join(" ").trim() || undefined,
+        items: numLines,
+      });
+      return;
+    }
+
+    // First paragraph → hook
+    if (i === 0) {
+      blocks.push({ type: "hook", text: para });
+      return;
+    }
+
+    blocks.push({ type: "body", text: para });
+  });
+
+  return blocks;
+}
+
+// ── FullContent ────────────────────────────────────────────────────────────
+
+function FullContent({ full }: { full: string }) {
+  const blocks = parseFull(full);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {blocks.map((block, i) => {
+        switch (block.type) {
+          case "hook":
+            return (
+              <p
+                key={i}
+                style={{
+                  fontSize: "0.9375rem",
+                  color: "#C4B99A",
+                  fontStyle: "italic",
+                  borderLeft: "2px solid #F59E0B",
+                  paddingLeft: 16,
+                  lineHeight: "1.75",
+                }}
+              >
+                {block.text}
+              </p>
+            );
+
+          case "arrow-group":
+            return (
+              <div key={i}>
+                {block.label && (
+                  <p
+                    className="font-mono"
+                    style={{ color: "#6B6560", fontSize: 11, marginBottom: 8 }}
+                  >
+                    {block.label}
+                  </p>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {block.items.map((item, j) => (
+                    <div
+                      key={j}
+                      style={{
+                        background: "#1C1A18",
+                        borderTop: "1px solid #2A2724",
+                        borderRight: "1px solid #2A2724",
+                        borderBottom: "1px solid #2A2724",
+                        borderLeft: "3px solid #F59E0B",
+                        borderRadius: 6,
+                        padding: "9px 14px",
+                        fontSize: 13,
+                        color: "#8C8680",
+                        lineHeight: "1.6",
+                        display: "flex",
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{ color: "#FBBF24", fontWeight: 600, flexShrink: 0 }}>→</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case "interview":
+            return (
+              <div
+                key={i}
+                style={{
+                  background: "rgba(245,158,11,0.06)",
+                  border: "1px solid rgba(245,158,11,0.2)",
+                  borderRadius: 8,
+                  padding: 16,
+                }}
+              >
+                <p
+                  className="font-mono"
+                  style={{ color: "#F59E0B", fontSize: 11, marginBottom: 8 }}
+                >
+                  💬 interview answer
+                </p>
+                <p style={{ color: "#C4B99A", fontSize: 13, fontStyle: "italic", lineHeight: "1.65" }}>
+                  {block.content.replace(/^interview (answer|application)[^:]*:\s*/i, "")}
+                </p>
+              </div>
+            );
+
+          case "gotcha":
+            return (
+              <div
+                key={i}
+                style={{
+                  background: "rgba(239,68,68,0.05)",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                  borderRadius: 8,
+                  padding: 16,
+                }}
+              >
+                <p
+                  className="font-mono"
+                  style={{ color: "#F87171", fontSize: 11, marginBottom: 8 }}
+                >
+                  ⚠️ gotcha
+                </p>
+                <p style={{ color: "#8C8680", fontSize: 13, lineHeight: "1.65" }}>
+                  {block.content}
+                </p>
+              </div>
+            );
+
+          case "numbered":
+            return (
+              <div key={i}>
+                {block.label && (
+                  <p
+                    className="font-mono"
+                    style={{ color: "#6B6560", fontSize: 11, marginBottom: 8 }}
+                  >
+                    {block.label}
+                  </p>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {block.items.map((item, j) => (
+                    <div
+                      key={j}
+                      style={{ display: "flex", gap: 10, fontSize: 13, color: "#8C8680", lineHeight: "1.6" }}
+                    >
+                      <span
+                        className="font-mono"
+                        style={{ color: "#F59E0B", fontSize: 12, flexShrink: 0, marginTop: 2 }}
+                      >
+                        {j + 1}.
+                      </span>
+                      <span>{item.replace(/^\d+[.)]\s/, "")}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case "body":
+            return (
+              <p key={i} style={{ color: "#8C8680", fontSize: 13, lineHeight: "1.75" }}>
+                {block.text}
+              </p>
+            );
+
+          default:
+            return null;
+        }
+      })}
+    </div>
   );
 }
 
@@ -105,7 +327,8 @@ function ConceptCard({ concept }: { concept: (typeof concepts)[0] }) {
           borderRight: `1px solid ${borderColor}`,
           borderBottom: `1px solid ${borderColor}`,
           borderLeft: expanded ? "3px solid #F59E0B" : `1px solid ${borderColor}`,
-          transition: "border-color 0.2s ease, background 0.15s ease",
+          boxShadow: expanded ? "-3px 0 12px rgba(245,158,11,0.1)" : "none",
+          transition: "border-color 0.2s ease, background 0.15s ease, box-shadow 0.2s ease",
         }}
       >
         {/* Clickable header row */}
@@ -167,24 +390,24 @@ function ConceptCard({ concept }: { concept: (typeof concepts)[0] }) {
               transition={{ duration: 0.25, ease: "easeInOut" }}
               style={{ overflow: "hidden" }}
             >
-              <div style={{ padding: "0 24px 24px", borderTop: "1px solid #2A2724" }}>
-                <p
-                  className="text-sm leading-relaxed whitespace-pre-line"
-                  style={{ color: "#8C8680", marginTop: 16 }}
-                >
-                  {concept.full}
-                </p>
+              <div style={{ padding: "0 28px 28px", borderTop: "1px solid #2A2724" }}>
+                <div style={{ maxWidth: "65ch", marginTop: 20 }}>
+                  <FullContent full={concept.full} />
+                </div>
                 {concept.appearsIn.length > 0 && (
-                  <div className="mt-4 flex items-start gap-2 flex-wrap">
-                    <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "#524E4A" }}>
-                      appears in:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {concept.appearsIn.map((system) => (
-                        <AppearanceTag key={system} system={system} />
-                      ))}
+                  <>
+                    <div style={{ height: 1, background: "#2A2724", margin: "20px 0" }} />
+                    <div className="flex items-start gap-2 flex-wrap">
+                      <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "#524E4A" }}>
+                        appears in:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {concept.appearsIn.map((system) => (
+                          <AppearanceTag key={system} system={system} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             </motion.div>
