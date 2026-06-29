@@ -29,6 +29,11 @@ import { notificationSystemCanvas } from "@/data/systems/notification-system-can
 import { stockPriceTickerCanvas } from "@/data/systems/stock-price-ticker-canvas";
 import { chatSystemCanvas } from "@/data/systems/chat-system-canvas";
 import { videoStreamingCanvas } from "@/data/systems/video-streaming-canvas";
+import { twitterFeedCanvas } from "@/data/systems/twitter-feed-canvas";
+import { uberCanvas } from "@/data/systems/uber-canvas";
+import { instagramCanvas } from "@/data/systems/instagram-canvas";
+import { googleMapsCanvas } from "@/data/systems/google-maps-canvas";
+import { youtubeCanvas } from "@/data/systems/youtube-canvas";
 
 const nodeTypes: NodeTypes = { system: SystemNode };
 
@@ -48,6 +53,11 @@ const CANVAS_DATA: Record<string, CanvasData> = {
   "stock-price-ticker": stockPriceTickerCanvas,
   "chat-system": chatSystemCanvas,
   "video-streaming": videoStreamingCanvas,
+  "twitter-feed": twitterFeedCanvas,
+  "uber": uberCanvas,
+  "instagram": instagramCanvas,
+  "google-maps": googleMapsCanvas,
+  "youtube": youtubeCanvas,
 };
 
 function DesignCanvasInner({
@@ -57,6 +67,7 @@ function DesignCanvasInner({
   systemId: string;
   systemTitle: string;
 }) {
+  const isPracticeMode = systemId === "practice";
   const { screenToFlowPosition, fitView } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -243,7 +254,7 @@ function DesignCanvasInner({
     localStorage.removeItem(`sysdesign_canvas_${systemId}`);
   }, [setNodes, setEdges, systemId]);
 
-  const canCheck = nodes.length >= 3 && edges.length >= 2 && !isViewingAnswer;
+  const canCheck = !isPracticeMode && nodes.length >= 3 && edges.length >= 2 && !isViewingAnswer;
 
   const handleCheckDesign = useCallback(() => {
     if (!canCheck) return;
@@ -264,34 +275,48 @@ function DesignCanvasInner({
         className="shrink-0 flex items-center gap-3 px-4 py-3 border-b"
         style={{ background: "#0F0E0D", borderColor: "#2A2724" }}
       >
-        <Link
-          href={`/learn/${systemId}`}
-          className="font-mono text-xs transition-colors"
-          style={{ color: "#524E4A" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
-        >
-          ← story
-        </Link>
+        {isPracticeMode ? (
+          <Link
+            href="/"
+            className="font-mono text-xs transition-colors"
+            style={{ color: "#524E4A" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
+          >
+            ← home
+          </Link>
+        ) : (
+          <Link
+            href={`/learn/${systemId}`}
+            className="font-mono text-xs transition-colors"
+            style={{ color: "#524E4A" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#8C8680")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#524E4A")}
+          >
+            ← story
+          </Link>
+        )}
         <span style={{ color: "#2A2724" }}>·</span>
         <span className="font-mono text-xs truncate" style={{ color: "#524E4A" }}>
-          {systemTitle}
+          {isPracticeMode ? "open canvas" : systemTitle}
         </span>
         <span className="font-mono text-xs" style={{ color: "#2A2724" }}>
-          / design mode
+          {isPracticeMode ? "/ practice mode" : "/ design mode"}
         </span>
         <div className="flex-1" />
-        <button
-          onClick={handleCheckDesign}
-          disabled={!canCheck || isChecking}
-          className="font-mono text-xs px-3 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            background: canCheck && !isChecking ? "#F59E0B" : "#2A2724",
-            color: canCheck && !isChecking ? "#0F0E0D" : "#524E4A",
-          }}
-        >
-          {isChecking ? "checking..." : "check design →"}
-        </button>
+        {!isPracticeMode && (
+          <button
+            onClick={handleCheckDesign}
+            disabled={!canCheck || isChecking}
+            className="font-mono text-xs px-3 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: canCheck && !isChecking ? "#F59E0B" : "#2A2724",
+              color: canCheck && !isChecking ? "#0F0E0D" : "#524E4A",
+            }}
+          >
+            {isChecking ? "checking..." : "check design →"}
+          </button>
+        )}
       </div>
 
       {/* Main layout */}
@@ -396,27 +421,50 @@ function DesignCanvasInner({
             >
               clear
             </button>
-            <span className="h-4 border-l" style={{ borderColor: "#2A2724" }} />
-            <button
-              onClick={() => setShowAnswerConfirm(true)}
-              className="font-mono text-xs px-2 py-0.5 border transition-colors"
-              style={{ borderColor: "rgba(245, 158, 11, 0.2)", color: "#8C8680" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#F59E0B";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245, 158, 11, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#8C8680";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245, 158, 11, 0.2)";
-              }}
-            >
-              // show answer
-            </button>
+            {!isPracticeMode && (
+              <>
+                <span className="h-4 border-l" style={{ borderColor: "#2A2724" }} />
+                <button
+                  onClick={() => setShowAnswerConfirm(true)}
+                  className="font-mono text-xs px-2 py-0.5 border transition-colors"
+                  style={{ borderColor: "rgba(245, 158, 11, 0.2)", color: "#8C8680" }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color = "#F59E0B";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245, 158, 11, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color = "#8C8680";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245, 158, 11, 0.2)";
+                  }}
+                >
+                  // show answer
+                </button>
+              </>
+            )}
             <div className="flex-1" />
             <span className="font-mono text-xs select-none" style={{ color: "#2A2724" }}>
               {nodes.length} nodes · {edges.length} edges
             </span>
           </div>
+
+          {/* Practice mode banner */}
+          {isPracticeMode && (
+            <div
+              className="shrink-0 flex items-center gap-3 px-4 py-2 border-b"
+              style={{
+                background: "rgba(99, 102, 241, 0.05)",
+                borderColor: "rgba(99, 102, 241, 0.2)",
+              }}
+            >
+              <span className="font-mono text-xs" style={{ color: "#6366F1" }}>
+                // practice mode — no scoring, no answer. design freely.
+              </span>
+              <div className="flex-1" />
+              <span className="font-mono text-[10px]" style={{ color: "#3D3830" }}>
+                {nodes.length} nodes · {edges.length} edges
+              </span>
+            </div>
+          )}
 
           {/* Answer view banner */}
           {isViewingAnswer && (
@@ -520,25 +568,38 @@ function DesignCanvasInner({
             )}
           </div>
 
-          {/* Check design */}
+          {/* Check design / practice info */}
           <div className="shrink-0 p-4 border-t" style={{ borderColor: "#2A2724" }}>
-            <button
-              onClick={handleCheckDesign}
-              disabled={!canCheck || isChecking}
-              className="w-full font-mono text-sm py-2.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                background: canCheck && !isChecking ? "#F59E0B" : "#2A2724",
-                color: canCheck && !isChecking ? "#0F0E0D" : "#524E4A",
-              }}
-            >
-              {isChecking ? "checking..." : "check design →"}
-            </button>
-            {!canCheck && !isViewingAnswer && (
-              <p className="font-mono text-[10px] mt-2 text-center leading-relaxed" style={{ color: "#3D3830" }}>
-                {nodes.length < 3 && `add ${3 - nodes.length} more node${3 - nodes.length > 1 ? "s" : ""}`}
-                {nodes.length < 3 && edges.length < 2 && " · "}
-                {edges.length < 2 && `add ${2 - edges.length} more connection${2 - edges.length > 1 ? "s" : ""}`}
-              </p>
+            {isPracticeMode ? (
+              <div className="text-center">
+                <p className="font-mono text-[10px] leading-relaxed" style={{ color: "#3D3830" }}>
+                  // practice mode
+                </p>
+                <p className="font-mono text-[10px] mt-1 leading-relaxed" style={{ color: "#2A2724" }}>
+                  design freely — no scoring
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={handleCheckDesign}
+                  disabled={!canCheck || isChecking}
+                  className="w-full font-mono text-sm py-2.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: canCheck && !isChecking ? "#F59E0B" : "#2A2724",
+                    color: canCheck && !isChecking ? "#0F0E0D" : "#524E4A",
+                  }}
+                >
+                  {isChecking ? "checking..." : "check design →"}
+                </button>
+                {!canCheck && !isViewingAnswer && (
+                  <p className="font-mono text-[10px] mt-2 text-center leading-relaxed" style={{ color: "#3D3830" }}>
+                    {nodes.length < 3 && `add ${3 - nodes.length} more node${3 - nodes.length > 1 ? "s" : ""}`}
+                    {nodes.length < 3 && edges.length < 2 && " · "}
+                    {edges.length < 2 && `add ${2 - edges.length} more connection${2 - edges.length > 1 ? "s" : ""}`}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

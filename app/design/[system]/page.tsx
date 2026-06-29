@@ -8,6 +8,12 @@ const SYSTEMS: Record<string, { title: string }> = {
   "stock-price-ticker": { title: "Stock Price Ticker" },
   "chat-system": { title: "Chat System" },
   "video-streaming": { title: "Video Streaming" },
+  "twitter-feed": { title: "Twitter / X Feed" },
+  "uber": { title: "Uber / Ride Sharing" },
+  "instagram": { title: "Instagram" },
+  "google-maps": { title: "Google Maps" },
+  "youtube": { title: "YouTube" },
+  "practice": { title: "Practice Mode" },
 };
 
 interface Props {
