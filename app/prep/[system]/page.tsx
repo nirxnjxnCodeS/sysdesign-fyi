@@ -10,6 +10,11 @@ import { notificationSystemPrep } from "@/data/prep/notification-system-prep";
 import { stockPriceTickerPrep } from "@/data/prep/stock-price-ticker-prep";
 import { chatSystemPrep } from "@/data/prep/chat-system-prep";
 import { videoStreamingPrep } from "@/data/prep/video-streaming-prep";
+import { twitterFeedPrep } from "@/data/prep/twitter-feed-prep";
+import { uberPrep } from "@/data/prep/uber-prep";
+import { instagramPrep } from "@/data/prep/instagram-prep";
+import { googleMapsPrep } from "@/data/prep/google-maps-prep";
+import { youtubePrep } from "@/data/prep/youtube-prep";
 import type {
   PrepData,
   PrepSection,
@@ -41,6 +46,11 @@ const PREP_REGISTRY: Record<string, PrepData> = {
   "stock-price-ticker": stockPriceTickerPrep,
   "chat-system": chatSystemPrep,
   "video-streaming": videoStreamingPrep,
+  "twitter-feed": twitterFeedPrep,
+  "uber": uberPrep,
+  "instagram": instagramPrep,
+  "google-maps": googleMapsPrep,
+  "youtube": youtubePrep,
 };
 
 const STATIC_SECTION_LABELS: Record<string, string> = {
