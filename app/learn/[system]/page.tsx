@@ -7,6 +7,11 @@ import { notificationSystem } from "@/data/systems/notification-system";
 import { stockPriceTicker } from "@/data/systems/stock-price-ticker";
 import { chatSystem } from "@/data/systems/chat-system";
 import { videoStreaming } from "@/data/systems/video-streaming";
+import { twitterFeed } from "@/data/systems/twitter-feed";
+import { uber } from "@/data/systems/uber";
+import { instagram } from "@/data/systems/instagram";
+import { googleMaps } from "@/data/systems/google-maps";
+import { youtube } from "@/data/systems/youtube";
 import type { SystemStoryData } from "@/lib/types";
 
 // Registry of all systems with story data
@@ -17,6 +22,11 @@ const SYSTEMS: Record<string, SystemStoryData> = {
   "stock-price-ticker": stockPriceTicker as SystemStoryData,
   "chat-system": chatSystem as SystemStoryData,
   "video-streaming": videoStreaming as SystemStoryData,
+  "twitter-feed": twitterFeed as SystemStoryData,
+  "uber": uber as SystemStoryData,
+  "instagram": instagram as SystemStoryData,
+  "google-maps": googleMaps as SystemStoryData,
+  "youtube": youtube as SystemStoryData,
 };
 
 interface Props {
